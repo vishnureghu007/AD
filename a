@@ -1,9 +1,9 @@
 ACT_ARCHIVES = [":{}_library".format(act)
                 for act in EXPORTED]
 
-GROUP_WHOLEARCHIVE_LINKOPTS = sum([
-    ["-Wl,--whole-archive",
-     "$(location {})".format(lbl),
-     "-Wl,--no-whole-archive"]
+GROUP_WHOLEARCHIVE_LINKOPTS = [
+    flag
     for lbl in ACT_ARCHIVES
-], [])
+    for flag in ["-Wl,--whole-archive", "$(location {})".format(lbl), "-Wl,--no-whole-archive"]
+]
+
