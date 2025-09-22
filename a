@@ -7,3 +7,17 @@ GROUP_WHOLEARCHIVE_LINKOPTS = [
     for flag in ["-Wl,--whole-archive", "$(location {})".format(lbl), "-Wl,--no-whole-archive"]
 ]
 
+cc_binary(
+  name = "odr_check",
+  srcs = ["//tools/empty:empty_main.cc"],  # a trivial int main(){return 0;}
+  linkstatic = True,
+  copts = ["-fvisibility=hidden"],
+  linkopts = ODR_CHECK_LINKOPTS + [
+    "-Wl,--no-undefined",
+  ],
+  data = ODR_CHECK_DATA,
+  deps = [],   # do NOT put the archives in deps (they’re referenced via linkopts)
+  visibility = ["//visibility:private"],
+  tags = ["manual"],
+)
+
