@@ -1,0 +1,23 @@
+# Number of chunks you want
+NUM_CHUNKS = 20
+
+# Compute chunk size (ceil division)
+chunk_size = (len(EXPORTED) + NUM_CHUNKS - 1) // NUM_CHUNKS
+
+BLACKBOX_GROUPS = [
+    EXPORTED[i * chunk_size : (i + 1) * chunk_size]
+    for i in range(NUM_CHUNKS)
+    if EXPORTED[i * chunk_size : (i + 1) * chunk_size]  # drop empty
+]
+[
+  x(
+        name = "xo{}".format(i),
+        deps = [":{}_public_static_library".format(act) for act in group],
+    )
+    for i, group in enumerate(BLACKBOX_GROUPS)
+]
+
+x(
+    name = "name",
+    deps = [":xo{}".format(i) for i in range(len(BLACKBOX_GROUPS))],
+)
