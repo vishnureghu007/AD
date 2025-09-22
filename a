@@ -21,3 +21,15 @@ cc_binary(
   tags = ["manual"],
 )
 
+[
+    cc_import(
+        name = "{}_odr_archive".format(act),
+        static_library = ":{}_x".format(act),  # label that produces the .a
+        alwayslink = True, 
+        visibility = ["//visibility:private"],
+    )
+    for act in E
+]
+
+
+
