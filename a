@@ -106,5 +106,12 @@ if __name__ == "__main__":
     check_archives_in_dir(directory)
 
 
+for f in *.so; do
+    echo "=== $f ==="
+    nm -D "$f" | grep your_symbol
+done
+
+
+
 
 
