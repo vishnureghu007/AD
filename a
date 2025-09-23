@@ -31,5 +31,80 @@ cc_binary(
     for act in E
 ]
 
+#!/usr/bin/env python3
+import subprocess
+import sys
+import os
+from collections import defaultdict
+
+def extract_symbols(archive):
+    """
+    Run nm on the given .a archive and return a list of defined symbols.
+    Keeps strong text (T) and weak (W) symbols.
+    """
+    try:
+        result = subprocess.run(
+            ["nm", "-g", "--defined-only", archive],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True,
+            text=True
+        )
+    except subprocess.CalledProcessError as e:
+        print(f"Error running nm on {archive}: {e.stderr}", file=sys.stderr)
+        return []
+
+    symbols = []
+    for line in result.stdout.splitlines():
+        parts = line.strip().split()
+        if len(parts) >= 3:
+            # Format: <addr> <type> <symbol>
+            sym_type = parts[1]
+            sym_name = parts[2]
+            if sym_type.upper() in ("T", "W"):  # text/weak
+                symbols.append(sym_name)
+    return symbols
+
+def check_archives_in_dir(directory):
+    """
+    Scan a directory for .a files and check for duplicate symbols.
+    """
+    archives = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith(".a")]
+    if not archives:
+        print(f"No .a files found in {directory}")
+        return
+
+    print(f"Found {len(archives)} archives to check.")
+    symbol_map = defaultdict(list)
+
+    for archive in archives:
+        symbols = extract_symbols(archive)
+        for sym in symbols:
+            symbol_map[sym].append(os.path.basename(archive))
+
+    duplicates = {sym: libs for sym, libs in symbol_map.items() if len(libs) > 1}
+
+    if not duplicates:
+        print("✅ No duplicate symbols found.")
+    else:
+        print("❌ Duplicate symbols detected:")
+        for sym, libs in duplicates.items():
+            print(f"  {sym}:")
+            for lib in libs:
+                print(f"    - {lib}")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print(f"Usage: {sys.argv[0]} <path-to-folder>", file=sys.stderr)
+        sys.exit(1)
+
+    directory = sys.argv[1]
+    if not os.path.isdir(directory):
+        print(f"Error: {directory} is not a valid directory", file=sys.stderr)
+        sys.exit(1)
+
+    check_archives_in_dir(directory)
+
+
 
 
